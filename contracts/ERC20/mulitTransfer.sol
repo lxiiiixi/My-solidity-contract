@@ -24,16 +24,19 @@ contract multiTransfer{
     * 批量转账Token
     * 每个地址转入数量 amount_
     * 接收转账地址是一个地址数组 accounts_
-    * 代币的合约地址 contract_
+    * 代币的合约地址 contract_ 
+    *
+    * 注意实现的流程：
+    * 1. 在ERC20代币合约部署之后要将本合约作为spender调用approve方法授权
+    * 2. 只有本合约被授权代币转账并且有足够的数量额度,才可以成功调用multiTransferToken方法给accounts_中的地址转账
     **/
     function multiTransferToken(uint amount_,address[] memory accounts_,address contract_) public {
         uint balance = IERC20(contract_).balanceOf(msg.sender); // 获取到合约调用者的余额
         uint total = amount_ * accounts_.length; // 本次交易需要的合约调用者的代币总量
-        require(total >= balance,"You don't have enough Token");
+        require(total < balance,"You don't have enough Token");
         for(uint i=0; i<accounts_.length; i++){
             // 合约用户不能直接给目标账户发送Token，本质上是通过合约在中间转发
             IERC20(contract_).transferFrom(msg.sender,accounts_[i],amount_);
         }
-        
     }
 }
